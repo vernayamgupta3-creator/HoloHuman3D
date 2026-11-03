@@ -56,3 +56,17 @@ tracking/*.visual-backup
 
 # Nested accidental repository and environment
 /HoloHuman3D/
+
+# Web frontend dependencies and build output
+web/frontend/node_modules/
+web/frontend/dist/
+
+# Large anatomy dataset - host separately
+web/frontend/public/atlas/data/*/meshes.bin
+
+# Local backups
+web/frontend/public/atlas/*.backup
+web/frontend/public/atlas/*.visual-backup
+web/frontend/public/atlas/*.before_*
+web/frontend/public/atlas/*.current_before_*
+
