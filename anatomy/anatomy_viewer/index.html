@@ -1,0 +1,364 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>HoloHuman 3D Viewer</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background: transparent;
+    color: #dff8ff;
+    font-family: Arial, sans-serif;
+}
+
+#viewer {
+    width: 100vw;
+    height: 100vh;
+}
+
+#loading {
+    position: absolute;
+    top: 18px;
+    left: 20px;
+    color: #55e6ff;
+    font-size: 12px;
+    letter-spacing: 2px;
+    pointer-events: none;
+}
+
+#controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    background: rgba(13, 35, 55, 0.9);
+    border: 1px solid #27627c;
+    color: #8eeaff;
+    padding: 10px 17px;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #17435a;
+}
+
+#modelInput {
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="viewer"></div>
+
+<div id="loading">HOLOHUMAN 3D · INITIALIZING VIEWER</div>
+
+<div id="controls">
+    <button id="rotateButton">Rotate</button>
+    <button id="resetButton">Reset View</button>
+    <button id="loadButton">Load Anatomy Model</button>
+    <input id="modelInput" type="file" accept=".glb,.gltf">
+</div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
+    }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from
+'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
+
+import { GLTFLoader } from
+'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
+
+const container = document.getElementById('viewer');
+
+const scene = new THREE.Scene();
+scene.background = null;
+
+const camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+);
+
+camera.position.set(4, 2.5, 7);
+
+const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    powerPreference: "high-performance"
+});
+
+renderer.setClearColor(0x000000, 0);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.target.set(0, 1.2, 0);
+
+scene.add(new THREE.AmbientLight(0x8abfff, 2));
+
+const cyanLight = new THREE.PointLight(0x27dfff, 35, 15);
+cyanLight.position.set(4, 5, 4);
+scene.add(cyanLight);
+
+const blueLight = new THREE.PointLight(0x245dff, 25, 15);
+blueLight.position.set(-4, 2, -3);
+scene.add(blueLight);
+
+// Ground grid
+const grid = new THREE.GridHelper(12, 24, 0x17617a, 0x102b42);
+grid.position.y = -0.02;
+scene.add(grid);
+
+// Human placeholder
+const human = new THREE.Group();
+scene.add(human);
+
+const hologramMaterial = new THREE.MeshStandardMaterial({
+    color: 0x38c9ec,
+    metalness: 0.45,
+    roughness: 0.28,
+    transparent: true,
+    opacity: 0.72,
+    emissive: 0x063b55,
+    emissiveIntensity: 1.1
+});
+
+const jointMaterial = new THREE.MeshStandardMaterial({
+    color: 0x9cefff,
+    emissive: 0x146b91,
+    emissiveIntensity: 1.2,
+    transparent: true,
+    opacity: 0.85
+});
+
+function addSphere(x, y, z, sx, sy, sz) {
+    const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 32, 24),
+        hologramMaterial
+    );
+
+    mesh.position.set(x, y, z);
+    mesh.scale.set(sx, sy, sz);
+    human.add(mesh);
+
+    return mesh;
+}
+
+function addBone(start, end, radius) {
+    const a = new THREE.Vector3(...start);
+    const b = new THREE.Vector3(...end);
+
+    const direction = new THREE.Vector3().subVectors(b, a);
+    const geometry = new THREE.CylinderGeometry(
+        radius, radius, direction.length(), 16
+    );
+
+    const bone = new THREE.Mesh(geometry, hologramMaterial);
+
+    bone.position.copy(a).add(b).multiplyScalar(0.5);
+    bone.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+    );
+
+    human.add(bone);
+    return bone;
+}
+
+// Head and neck
+addSphere(0, 2.75, 0, 0.32, 0.42, 0.30);
+addSphere(0, 2.25, 0, 0.13, 0.20, 0.13);
+
+// Torso
+addSphere(0, 1.65, 0, 0.65, 0.72, 0.31);
+addSphere(0, 1.05, 0, 0.48, 0.36, 0.27);
+
+// Arms
+for (const side of [-1, 1]) {
+    addBone(
+        [side * 0.52, 2.02, 0],
+        [side * 0.95, 1.45, 0],
+        0.13
+    );
+
+    addSphere(side * 0.95, 1.45, 0, 0.13, 0.15, 0.13);
+
+    addBone(
+        [side * 0.95, 1.45, 0],
+        [side * 1.12, 0.85, 0],
+        0.09
+    );
+
+    addSphere(side * 1.12, 0.85, 0, 0.11, 0.12, 0.10);
+
+    addBone(
+        [side * 1.12, 0.85, 0],
+        [side * 1.16, 0.60, 0],
+        0.10
+    );
+}
+
+// Legs
+for (const side of [-1, 1]) {
+    addBone(
+        [side * 0.23, 0.90, 0],
+        [side * 0.27, 0.05, 0],
+        0.17
+    );
+
+    addSphere(side * 0.27, 0.05, 0, 0.17, 0.16, 0.17);
+
+    addBone(
+        [side * 0.27, 0.05, 0],
+        [side * 0.28, -0.85, 0],
+        0.12
+    );
+
+    addSphere(side * 0.28, -0.95, 0.10, 0.19, 0.12, 0.32);
+}
+
+// Skeleton-style connecting lines
+const skeletonMaterial = new THREE.LineBasicMaterial({
+    color: 0x8beeff,
+    transparent: true,
+    opacity: 0.8
+});
+
+const spinePoints = [
+    new THREE.Vector3(0, 2.15, 0),
+    new THREE.Vector3(0, 1.85, 0),
+    new THREE.Vector3(0, 1.55, 0),
+    new THREE.Vector3(0, 1.25, 0),
+    new THREE.Vector3(0, 0.95, 0)
+];
+
+const spine = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(spinePoints),
+    skeletonMaterial
+);
+
+human.add(spine);
+
+// Decorative rings
+const ringMaterial = new THREE.MeshBasicMaterial({
+    color: 0x1ebee8,
+    transparent: true,
+    opacity: 0.35
+});
+
+for (let i = 0; i < 3; i++) {
+    const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(1.5 + i * 0.25, 0.008, 8, 100),
+        ringMaterial
+    );
+
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.8;
+    scene.add(ring);
+}
+
+// Model loading
+const loader = new GLTFLoader();
+
+document.getElementById('loadButton').onclick = () => {
+    document.getElementById('modelInput').click();
+};
+
+document.getElementById('modelInput').onchange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+
+    loader.load(url, (gltf) => {
+        scene.remove(human);
+
+        const model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+
+        model.position.sub(center);
+
+        const maxDimension = Math.max(size.x, size.y, size.z);
+
+        if (maxDimension > 0) {
+            model.scale.setScalar(3.5 / maxDimension);
+        }
+
+        scene.add(model);
+
+        controls.target.set(0, 0, 0);
+        document.getElementById('loading').textContent =
+            'ANATOMICAL MODEL LOADED';
+
+        URL.revokeObjectURL(url);
+    }, undefined, (error) => {
+        console.error(error);
+        document.getElementById('loading').textContent =
+            'MODEL LOADING FAILED';
+        URL.revokeObjectURL(url);
+    });
+};
+
+document.getElementById('rotateButton').onclick = () => {
+    controls.autoRotate = !controls.autoRotate;
+};
+
+document.getElementById('resetButton').onclick = () => {
+    camera.position.set(4, 2.5, 7);
+    controls.target.set(0, 1.2, 0);
+    controls.update();
+};
+
+document.getElementById('loading').textContent =
+    '3D VIEWER ONLINE · PLACEHOLDER MODEL';
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>

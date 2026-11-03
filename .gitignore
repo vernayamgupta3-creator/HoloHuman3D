@@ -1,0 +1,58 @@
+﻿# Python environments
+.venv/
+.venv312/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# IDE and OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Local backups
+*.backup
+*.bak
+*.before_*
+main.py.*
+
+# Experimental helper scripts
+adjust_pinch.py
+clean_workspace.py
+patch_systems.py
+redesign_interface.py
+separate_zoom.py
+test_hands.py
+update_controls.py
+upgrade_cursor.py
+upgrade_pinch.py
+upgrade_two_hand_pan.py
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Build outputs
+build/
+dist/
+node_modules/
+
+# Tracking backups and experiments
+tracking/*.backup*
+tracking/*.before_*
+tracking/*.label-backup
+tracking/*.premium-backup
+tracking/*.visual-backup
+
+# Nested accidental repository and environment
+/HoloHuman3D/
