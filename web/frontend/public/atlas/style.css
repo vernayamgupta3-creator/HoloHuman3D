@@ -258,3 +258,109 @@ dialog { width: min(640px, 94vw); max-height: 90vh; }
 .loading { flex-direction: column; gap: 10px; }
 .loading .bar { width: min(320px, 60%); height: 4px; border-radius: 2px; background: var(--panel-2); overflow: hidden; }
 .loading .bar > div { height: 100%; width: 0; background: var(--film); }
+
+/* ---------- HoloHuman3D Python camera integration ---------- */
+.stage #pythonCameraFeed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(1);
+  opacity: 0.72;
+  z-index: 0;
+  background: var(--stage);
+}
+
+.stage #viewport {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+#pythonTrackingStatus {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  background: rgba(30, 37, 46, 0.88);
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}
+
+#pythonTrackingStatus[data-state="connected"] {
+  color: var(--good);
+  border-color: var(--good);
+}
+
+/* HoloHuman3D live hand cursors */
+.stage .hand-cursor {
+  position: absolute;
+  z-index: 5;
+  display: none;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.hand-cursor .cursor-ring {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  left: -17px;
+  top: -17px;
+  border: 2px solid #8cc7c1;
+  border-radius: 50%;
+  background: rgba(140, 199, 193, 0.12);
+  transition: transform 0.12s, background 0.12s;
+}
+
+#handCursorRight .cursor-ring {
+  border-color: #e6b76c;
+  background: rgba(230, 183, 108, 0.12);
+}
+
+.hand-cursor .cursor-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  left: -3.5px;
+  top: -3.5px;
+  border-radius: 50%;
+  background: #8cc7c1;
+}
+
+#handCursorRight .cursor-dot {
+  background: #e6b76c;
+}
+
+.hand-cursor .cursor-label {
+  position: absolute;
+  left: 22px;
+  top: -9px;
+  white-space: nowrap;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: rgba(30, 37, 46, 0.94);
+  color: #8cc7c1;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+}
+
+#handCursorRight .cursor-label {
+  color: #e6b76c;
+}
+
+.hand-cursor.pinching .cursor-ring {
+  transform: scale(0.65);
+  background: rgba(140, 199, 193, 0.35);
+}
+
+#handCursorRight.pinching .cursor-ring {
+  background: rgba(230, 183, 108, 0.35);
+}

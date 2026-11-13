@@ -42,52 +42,96 @@
     $('#loadingBar').style.width = frac == null ? '0%' : `${Math.round(frac * 100)}%`;
   }
 
-  // Reads a response body while reporting bytes received.
-  async function readBody(res, onBytes) {
-    if (!res.body || !res.body.getReader) return new Uint8Array(await res.arrayBuffer());
-    const reader = res.body.getReader();
-    const chunks = [];
-    let n = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value); n += value.length; onBytes(value.length);
-    }
-    const out = new Uint8Array(n);
-    let o = 0;
-    for (const c of chunks) { out.set(c, o); o += c.length; }
-    return out;
+  // Downloads atlas files sequentially into one buffer.
+async function fetchAtlas(base) {
+  const r = await fetch(base + 'index.json', { cache: 'no-cache' });
+
+  if (!r.ok) throw new Error('No atlas at ' + base);
+
+  const index = await r.json();
+
+  const parts = index.parts || [{
+    file: 'meshes.bin',
+    size: index.buffers.indices[0] + index.buffers.indices[1]
+  }];
+
+  const total = parts.reduce((t, p) => t + p.size, 0);
+
+  if (!total || !Number.isSafeInteger(total)) {
+    throw new Error('Invalid atlas size.');
   }
 
-  async function fetchAtlas(base) {
-    const r = await fetch(base + 'index.json', { cache: 'no-cache' });
-    if (!r.ok) throw new Error('No atlas at ' + base);
-    const index = await r.json();
-    // Large atlases on static hosting are split into parts (GitHub limits single files).
-    const parts = index.parts || [{ file: 'meshes.bin', size: index.buffers.indices[0] + index.buffers.indices[1] }];
-    const total = parts.reduce((t, p) => t + p.size, 0);
-    let got = 0;
-    const tick = (k) => { got += k; showLoading(`Loading ${index.name} ${index.version}: ${(got / 1048576).toFixed(0)} of ${(total / 1048576).toFixed(0)} MB`, got / total); };
-    tick(0);
-    const pieces = await Promise.all(parts.map(async (p) => {
-      const res = await fetch(base + p.file, { cache: 'no-cache' });
-      if (!res.ok) throw new Error('Atlas mesh file is missing: ' + p.file);
-      return readBody(res, tick);
-    }));
-    let bin;
-    if (pieces.length === 1) bin = pieces[0].buffer.byteLength === pieces[0].length ? pieces[0].buffer : pieces[0].slice().buffer;
-    else {
-      const all = new Uint8Array(pieces.reduce((t, x) => t + x.length, 0));
-      let o = 0;
-      for (const x of pieces) { all.set(x, o); o += x.length; }
-      bin = all.buffer;
+  const bin = new Uint8Array(total);
+  let offset = 0;
+  let got = 0;
+
+  const tick = (bytes) => {
+    got += bytes;
+    showLoading(
+      `Loading ${index.name} ${index.version}: ${(got / 1048576).toFixed(0)} of ${(total / 1048576).toFixed(0)} MB`,
+      got / total
+    );
+  };
+
+  tick(0);
+
+  for (const part of parts) {
+    const res = await fetch(base + part.file, { cache: 'no-cache' });
+
+    if (!res.ok) {
+      throw new Error('Atlas mesh file is missing: ' + part.file);
     }
-    let glossary = null;
-    try { const g = await fetch(base + 'glossary.json', { cache: 'no-cache' }); if (g.ok) glossary = await g.json(); } catch (_) { /* optional */ }
-    return { index, bin, glossary };
+
+    let partBytes = 0;
+
+    if (res.body && res.body.getReader) {
+      const reader = res.body.getReader();
+
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        if (offset + value.length > total) {
+          throw new Error('Atlas data exceeds expected size.');
+        }
+
+        bin.set(value, offset);
+        offset += value.length;
+        partBytes += value.length;
+        tick(value.length);
+      }
+    } else {
+      const data = new Uint8Array(await res.arrayBuffer());
+
+      if (offset + data.length > total) {
+        throw new Error('Atlas data exceeds expected size.');
+      }
+
+      bin.set(data, offset);
+      offset += data.length;
+      partBytes += data.length;
+      tick(data.length);
+    }
+
+    if (partBytes !== part.size) {
+      throw new Error('Incomplete download: ' + part.file);
+    }
   }
 
-  // ---- static hosting (GitHub Pages): data/atlases.json lists the published atlases ----
+  if (offset !== total) {
+    throw new Error('Atlas download is incomplete.');
+  }
+
+  let glossary = null;
+
+  try {
+    const g = await fetch(base + 'glossary.json', { cache: 'no-cache' });
+    if (g.ok) glossary = await g.json();
+  } catch (_) {}
+
+  return { index, bin: bin.buffer, glossary };
+}
+// ---- static hosting (GitHub Pages): data/atlases.json lists the published atlases ----
   let site = null;
   let siteAtlas = null;
   async function loadSiteManifest() {

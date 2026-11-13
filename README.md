@@ -1,89 +1,106 @@
-\# HoloHuman3D
+# HoloHuman3D
 
+### Gesture-Controlled 3D Human Anatomy Exploration
 
+HoloHuman3D is an experimental Python desktop application that combines computer vision, real-time hand tracking, gesture recognition, and interactive 3D human anatomy visualization.
 
-\### Gesture-Controlled 3D Human Anatomy Exploration
+The project aims to make human anatomy exploration more intuitive through natural hand movements rather than conventional mouse-based interaction.
 
+## Features
 
+- Real-time hand tracking using MediaPipe.
+- Camera input and image processing using OpenCV.
+- Gesture-based interaction and navigation.
+- Two-hand interaction experiments.
+- Interactive 3D anatomy integration.
+- Python desktop interface powered by PySide6.
+- Embedded web-based anatomy visualization using Qt WebEngine.
 
-HoloHuman3D is an experimental desktop application combining computer vision, real-time hand tracking and interactive 3D human anatomy visualization.
+## Technology Stack
 
+| Technology | Purpose |
+|---|---|
+| Python | Core application |
+| OpenCV | Camera processing |
+| MediaPipe | Hand tracking |
+| PySide6 | Desktop interface |
+| Qt WebEngine | 3D web integration |
+| JavaScript | Anatomy interaction |
 
+## Project Structure
 
-The goal is to explore human anatomy through natural hand movements.
+```text
+HoloHuman3D/
+├── anatomy/
+├── assets/
+├── companion/
+├── docs/
+├── interface/
+├── modules/
+├── shared/
+├── tracking/
+├── web/
+├── main.py
+├── requirements.txt
+└── README.md
+```
 
+## Installation
 
+### 1. Clone the repository
 
-\## Project Status
+```bash
+git clone https://github.com/vernayamgupta3-creator/HoloHuman3D.git
+cd HoloHuman3D
+```
 
+### 2. Create a virtual environment
 
+```bash
+python -m venv .venv
+```
 
-\- Version: 0.1.0
+### 3. Activate the environment
 
-\- Status: Early development
-
-
-
-\## Technologies
-
-
-
-\- Python
-
-\- OpenCV
-
-\- MediaPipe Tasks
-
-\- PySide6
-
-\- Qt WebEngine
-
-\- JavaScript
-
-\- Node.js
-
-
-
-\## Current Implementation
-
-
-
-\- Desktop interface using PySide6.
-
-\- Webcam integration using OpenCV.
-
-\- Hand tracking using MediaPipe Tasks.
-
-\- Support for tracking up to two hands.
-
-\- Integration with an external 3D anatomy viewer.
-
-
-
-\## Installation
-
-
-
-\### Requirements
-
-
-
-\- Windows 10/11
-
-\- Python 3.12
-
-\- Node.js
-
-\- Webcam
-
-
-
-\### Install Python dependencies
-
-
+Windows:
 
 ```powershell
+.venv\Scripts\activate
+```
 
-py -3.12 -m venv .venv312
+### 4. Install dependencies
 
-.\\.venv312\\Scripts\\python.exe -m pip install -r requirements.txt
+```bash
+python -m pip install -r requirements.txt
+```
+
+### 5. Run the application
+
+```bash
+python main.py
+```
+
+## Requirements
+
+- Python 3.12
+- Webcam
+- Windows desktop environment (current development environment)
+- Internet connection may be required for certain external anatomy resources.
+
+## Project Status
+
+**Version:** 0.1.0
+**Status:** Experimental — Early Development
+
+This project is actively being developed. Features, interaction methods, and anatomy visualization are subject to change.
+
+## Author
+
+**Vernayam Gupta**
+
+B.Tech Computer Science and Engineering
+Artificial Intelligence and Data Science
+
+## Disclaimer
+
+HoloHuman3D is an educational and experimental project. It is not intended for clinical diagnosis or medical decision-making.

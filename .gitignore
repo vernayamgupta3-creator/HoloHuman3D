@@ -70,3 +70,6 @@ web/frontend/public/atlas/*.visual-backup
 web/frontend/public/atlas/*.before_*
 web/frontend/public/atlas/*.current_before_*
 
+
+# Vite local cache
+.vite/
